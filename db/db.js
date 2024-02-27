@@ -1,24 +1,28 @@
 import mongoose, { get } from "mongoose";
 
-const url =
-  "mongodb+srv://rba:iYO4QYuGObOsY2Yz@cluster0.hzusz0h.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
-
+const uri = process.env.MONGO_URI;
 const users = [
-  { id: 1, limite: 100000, saldo: 0 },
-  { id: 2, limite: 80000, saldo: 0 },
-  { id: 3, limite: 1000000, saldo: 0 },
-  { id: 4, limite: 10000000, saldo: 0 },
-  { id: 5, limite: 500000, saldo: 0 },
+  { id: 1, limite: 100000, saldo: 0, ultimas_transacoes: [] },
+  { id: 2, limite: 80000, saldo: 0, ultimas_transacoes: [] },
+  { id: 3, limite: 1000000, saldo: 0, ultimas_transacoes: [] },
+  { id: 4, limite: 10000000, saldo: 0, ultimas_transacoes: [] },
+  { id: 5, limite: 500000, saldo: 0, ultimas_transacoes: [] },
 ];
 const userSchema = new mongoose.Schema({
   id: Number,
   limite: Number,
   saldo: Number,
+  ultimas_transacoes: [{
+    valor: Number,
+    tipo: String,
+    descricao: String,
+    realizada_em: Date,
+  }],
 });
 const User = mongoose.model("User", userSchema);
 
 async function run() {
-  await mongoose.connect(url);
+  await mongoose.connect(uri);
   console.log("Connected to MongoDB");
   await insertUsers();
 }
@@ -48,5 +52,19 @@ export async function resetUsers() {
   await insertUsers();
 }
 
+export async function updateLastTransactions(id, transacao) {
+  let lastTransactions = await getTransactions(id);
+  if (lastTransactions.length >= 10) {
+    lastTransactions.pop();
+  }
+  lastTransactions.unshift(transacao);
+  await User.updateOne({ id: id }, { ultimas_transacoes: lastTransactions });
+}
+
+export async function getTransactions(id) {
+  const user = await getUser(id);
+  return await user.ultimas_transacoes;
+}
+
 run().catch((err) => console.dir(err));
-export default { getUser, updateBalance, resetUsers };
+export default { getUser, updateBalance, resetUsers, updateLastTransactions, getTransactions};

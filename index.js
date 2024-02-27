@@ -1,10 +1,16 @@
 import express from "express";
-import { getUser, updateBalance, resetUsers } from "./db/db.js";
-const port = 6969;
+import {
+  getUser,
+  updateBalance,
+  resetUsers,
+  updateLastTransactions,
+  getTransactions,
+} from "./db/db.js";
+
+const port = process.env.PORT;
 const app = express();
 
 app.use(express.json());
-
 app.set("port", port);
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
@@ -25,13 +31,17 @@ app.post("/clientes/:id/transacoes", async (req, res) => {
     return res.status(404).json({ message: "Cliente não encontrado" });
   }
   const novoSaldo = user.saldo - body.valor;
-  console.log(novoSaldo, -user.limite, body.tipo);
-  console.log(novoSaldo > -user.limite);
   if (body.tipo === "d" && novoSaldo < -user.limite) {
     console.log("422");
     return res.status(422).json({ message: "Limite insuficiente" });
   }
-  updateBalance(id, novoSaldo);
+  await updateBalance(id, novoSaldo);
+  await updateLastTransactions(id, {
+    valor: body.valor,
+    tipo: body.tipo,
+    descricao: "descricao",
+    realizada_em: new Date().toISOString(),
+  });
   return res.status(200).json({ limite: user.limite, saldo: novoSaldo });
 });
 
