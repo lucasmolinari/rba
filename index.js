@@ -1,5 +1,5 @@
 import express from "express";
-import { getUser, updateBalance, clearUsers } from "./db/db.js";
+import { getUser, updateBalance, resetUsers } from "./db/db.js";
 const port = 6969;
 const app = express();
 
@@ -13,21 +13,17 @@ app.listen(port, () => {
 app.get("/", (_, res) => {
   res.send("API works").status(200);
 });
-await clearUsers();
-// Transações: POST /clientes/[id]/transacoes
-//{
-//     "valor": 1000,
-//     "tipo" : "c",
-//     "descricao" : "descricao"
-// }
+
 app.post("/clientes/:id/transacoes", async (req, res) => {
   const id = req.params.id;
   const body = req.body;
+  if (isNaN(id) || isNaN(parseFloat(id))) {
+    return res.status(400).json({ message: "ID inválido" });
+  }
   const user = await getUser(id);
   if (user === null) {
     return res.status(404).json({ message: "Cliente não encontrado" });
   }
-
   const novoSaldo = user.saldo - body.valor;
   console.log(novoSaldo, -user.limite, body.tipo);
   console.log(novoSaldo > -user.limite);
@@ -43,4 +39,9 @@ app.post("/clientes/:id/transacoes", async (req, res) => {
 app.get("/clientes/:id/extrato", (req, res) => {
   const { id } = req.params;
   res.send(`Extrato do cliente ${id}`).status(200);
+});
+
+app.delete("/reset", async (req, res) => {
+  await resetUsers();
+  res.status(200).json({ message: "Users reseted" });
 });

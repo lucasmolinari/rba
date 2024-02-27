@@ -20,16 +20,17 @@ const User = mongoose.model("User", userSchema);
 async function run() {
   await mongoose.connect(url);
   console.log("Connected to MongoDB");
+  await insertUsers();
+}
 
+async function insertUsers() {
   for (const user of users) {
     if (await User.findOne({ id: user.id })) {
       continue;
     }
     const newUser = new User(user);
     await newUser.save();
-    console.log(`Inserted user ${user.id}`);
   }
-  //   mongoose.connection.close();
 }
 
 export async function getUser(id) {
@@ -40,12 +41,12 @@ export async function updateBalance(id, saldo) {
   await mongoose.model("User").updateOne({ id: id }, { saldo: saldo });
 }
 
-run().catch((err) => console.dir(err));
-
-export async function clearUsers() {
+export async function resetUsers() {
   for (const user of users) {
     await User.findOneAndDelete({ id: user.id });
   }
+  await insertUsers();
 }
 
-export default { getUser, updateBalance, clearUsers };
+run().catch((err) => console.dir(err));
+export default { getUser, updateBalance, resetUsers };
