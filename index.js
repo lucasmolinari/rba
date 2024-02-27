@@ -4,7 +4,6 @@ import {
   updateBalance,
   resetUsers,
   updateLastTransactions,
-  getTransactions,
 } from "./db/db.js";
 
 const port = process.env.PORT;
@@ -32,7 +31,6 @@ app.post("/clientes/:id/transacoes", async (req, res) => {
   }
   const novoSaldo = user.saldo - body.valor;
   if (body.tipo === "d" && novoSaldo < -user.limite) {
-    console.log("422");
     return res.status(422).json({ message: "Limite insuficiente" });
   }
   await updateBalance(id, novoSaldo);
@@ -46,9 +44,18 @@ app.post("/clientes/:id/transacoes", async (req, res) => {
 });
 
 // Extrato: GET /clientes/[id]/extrato
-app.get("/clientes/:id/extrato", (req, res) => {
+app.get("/clientes/:id/extrato", async (req, res) => {
   const { id } = req.params;
-  res.send(`Extrato do cliente ${id}`).status(200);
+  const user = await getUser(id);
+  if (user === null) {
+    return res.status(404).json({ message: "Cliente não encontrado" });
+  }
+  const balance = {
+    total: user.saldo,
+    data_extrato: new Date().toISOString(),
+    limite: user.limite,
+  }
+  res.status(200).json({saldo: balance, ultimas_transacoes: user.ultimas_transacoes});
 });
 
 app.delete("/reset", async (req, res) => {

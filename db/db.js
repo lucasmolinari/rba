@@ -8,16 +8,21 @@ const users = [
   { id: 4, limite: 10000000, saldo: 0, ultimas_transacoes: [] },
   { id: 5, limite: 500000, saldo: 0, ultimas_transacoes: [] },
 ];
-const userSchema = new mongoose.Schema({
-  id: Number,
-  limite: Number,
-  saldo: Number,
-  ultimas_transacoes: [{
+
+const transactionSchema = new mongoose.Schema(
+  {
     valor: Number,
     tipo: String,
     descricao: String,
     realizada_em: Date,
-  }],
+  },
+  { _id: false }
+);
+const userSchema = new mongoose.Schema({
+  id: Number,
+  limite: Number,
+  saldo: Number,
+  ultimas_transacoes: [transactionSchema],
 });
 const User = mongoose.model("User", userSchema);
 
@@ -38,7 +43,7 @@ async function insertUsers() {
 }
 
 export async function getUser(id) {
-  return await mongoose.model("User").findOne({ id: id });
+  return await mongoose.model("User").findOne({ id: id }, "-_id");
 }
 
 export async function updateBalance(id, saldo) {
@@ -67,4 +72,4 @@ export async function getTransactions(id) {
 }
 
 run().catch((err) => console.dir(err));
-export default { getUser, updateBalance, resetUsers, updateLastTransactions, getTransactions};
+export default { getUser, updateBalance, resetUsers, updateLastTransactions };
