@@ -1,5 +1,5 @@
 import express from "express";
-import { getUser, setBalance } from "./db/db.js";
+import { getUser, updateBalance, clearUsers } from "./db/db.js";
 const port = 6969;
 const app = express();
 
@@ -13,29 +13,30 @@ app.listen(port, () => {
 app.get("/", (_, res) => {
   res.send("API works").status(200);
 });
-
+await clearUsers();
 // Transações: POST /clientes/[id]/transacoes
 //{
 //     "valor": 1000,
 //     "tipo" : "c",
 //     "descricao" : "descricao"
 // }
-app.post("/clientes/:id/transacoes", (req, res) => {
+app.post("/clientes/:id/transacoes", async (req, res) => {
   const id = req.params.id;
   const body = req.body;
-  getUser(id)
-    .then((row) => {
-      const novoSaldo = row.saldo - body.valor;
-      if (body.tipo === "d" && novoSaldo > -row.limite) {
-        console.log("422");
-        return res.status(422).json({ message: "Limite insuficiente" });
-      }
-      setBalance(id, novoSaldo);
-      return res.status(200).json({ limite: row.limite, saldo: novoSaldo });
-    })
-    .catch((_) => {
-      return res.status(404).json({ message: "Cliente não encontrado" });
-    });
+  const user = await getUser(id);
+  if (user === null) {
+    return res.status(404).json({ message: "Cliente não encontrado" });
+  }
+
+  const novoSaldo = user.saldo - body.valor;
+  console.log(novoSaldo, -user.limite, body.tipo);
+  console.log(novoSaldo > -user.limite);
+  if (body.tipo === "d" && novoSaldo < -user.limite) {
+    console.log("422");
+    return res.status(422).json({ message: "Limite insuficiente" });
+  }
+  updateBalance(id, novoSaldo);
+  return res.status(200).json({ limite: user.limite, saldo: novoSaldo });
 });
 
 // Extrato: GET /clientes/[id]/extrato

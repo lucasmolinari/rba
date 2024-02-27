@@ -1,53 +1,51 @@
-import sqlite3 from "sqlite3";
+import mongoose, { get } from "mongoose";
 
-const db = new sqlite3.Database("./db/db.sqlite", (err) => {
-  if (err) {
-    console.error(err.message);
-  } else {
-    console.log("Connected to the SQLite database.");
+const url =
+  "mongodb+srv://rba:iYO4QYuGObOsY2Yz@cluster0.hzusz0h.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+
+const users = [
+  { id: 1, limite: 100000, saldo: 0 },
+  { id: 2, limite: 80000, saldo: 0 },
+  { id: 3, limite: 1000000, saldo: 0 },
+  { id: 4, limite: 10000000, saldo: 0 },
+  { id: 5, limite: 500000, saldo: 0 },
+];
+const userSchema = new mongoose.Schema({
+  id: Number,
+  limite: Number,
+  saldo: Number,
+});
+const User = mongoose.model("User", userSchema);
+
+async function run() {
+  await mongoose.connect(url);
+  console.log("Connected to MongoDB");
+
+  for (const user of users) {
+    if (await User.findOne({ id: user.id })) {
+      continue;
+    }
+    const newUser = new User(user);
+    await newUser.save();
+    console.log(`Inserted user ${user.id}`);
   }
-});
-db.serialize(() => {
-  db.run(
-    "CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, limite INT, saldo INT)",
-    (err) => {
-      if (err) {
-        console.error(err.message);
-        db.run("DROP TABLE users");
-      } else {
-        console.log("Users table created.");
-        // db.run("INSERT INTO users (id,limite, saldo) VALUES (1, 100000, 0)");
-        // db.run("INSERT INTO users (id,limite, saldo) VALUES (2, 80000, 0)");
-        // db.run("INSERT INTO users (id,limite, saldo) VALUES (3, 1000000, 0)");
-        // db.run("INSERT INTO users (id,limite, saldo) VALUES (4, 10000000, 0)");
-        // db.run("INSERT INTO users (id,limite, saldo) VALUES (5, 500000, 0)");
-        // console.log("Data inserted.");
-      }
-    }
-  );
-});
-
-export function getUser(id) {
-  return new Promise((resolve, reject) => {
-    db.get("SELECT * FROM users WHERE id = ?", [id], (err, row) => {
-      if (err) {
-        reject(err);
-      } else {
-        if (!row) {
-          reject("User not found");
-        }
-        resolve(row);
-      }
-    });
-  });
+  //   mongoose.connection.close();
 }
 
-export function setBalance(id, saldo) {
-  db.run("UPDATE users SET saldo = ? WHERE id = ?", [saldo, id], (err) => {
-    if (err) {
-      console.error(err.message);
-    }
-  });
+export async function getUser(id) {
+  return await mongoose.model("User").findOne({ id: id });
 }
 
-export default { getUser, setBalance };
+export async function updateBalance(id, saldo) {
+  await mongoose.model("User").updateOne({ id: id }, { saldo: saldo });
+}
+
+run().catch((err) => console.dir(err));
+
+export async function clearUsers() {
+  for (const user of users) {
+    await User.findOneAndDelete({ id: user.id });
+  }
+}
+
+export default { getUser, updateBalance, clearUsers };
