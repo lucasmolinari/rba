@@ -22,9 +22,11 @@ app.get("/", (_, res) => {
 app.post("/clientes/:id/transacoes", async (req, res) => {
   const id = req.params.id;
   const body = req.body;
-  if (isNaN(id) || isNaN(parseFloat(id))) {
-    return res.status(400).json({ message: "ID inválido" });
+  const isValid = await isBodyValid(body, id);
+  if (!isValid) {
+    return res.status(400).json({ message: "Dados inválidos" });
   }
+  
   const user = await getUser(id);
   if (user === null) {
     return res.status(404).json({ message: "Cliente não encontrado" });
@@ -54,11 +56,26 @@ app.get("/clientes/:id/extrato", async (req, res) => {
     total: user.saldo,
     data_extrato: new Date().toISOString(),
     limite: user.limite,
-  }
-  res.status(200).json({saldo: balance, ultimas_transacoes: user.ultimas_transacoes});
+  };
+  res
+    .status(200)
+    .json({ saldo: balance, ultimas_transacoes: user.ultimas_transacoes });
 });
 
 app.delete("/reset", async (req, res) => {
   await resetUsers();
   res.status(200).json({ message: "Users reseted" });
 });
+
+async function isBodyValid(body, id) {
+  if (isNaN(id) || isNaN(parseFloat(id))) {
+    return false;
+  }
+  if (body.tipo !== "d" && body.tipo !== "c") {
+    return false;
+  }
+  if (isNaN(body.valor) || isNaN(parseFloat(body.valor))) {
+    return false;
+  }
+  return true;
+}
