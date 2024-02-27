@@ -37,7 +37,7 @@ app.post("/clientes/:id/transacoes", async (req, res) => {
   await updateLastTransactions(id, {
     valor: body.valor,
     tipo: body.tipo,
-    descricao: "descricao",
+    descricao: body.descricao,
     realizada_em: new Date().toISOString(),
   });
   return res.status(200).json({ limite: user.limite, saldo: novoSaldo });
