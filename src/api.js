@@ -21,16 +21,12 @@ router.post("/clientes/:id/transacoes", async (req, res) => {
   if (user === null) {
     return res.status(404).json({ message: "Cliente não encontrado" });
   }
-  let newBalance;
-  if (body.tipo === "d") {
-    if (user.saldo - body.valor < -user.limite) {
+  
+  const newBalance = body.tipo === "d" ? user.saldo - body.valor : user.saldo + body.valor;
+    if (newBalance < -user.limite) {
       return res.status(422).json({ message: "Limite insuficiente" });
     }
-    newBalance = user.saldo - body.valor;
-  } else {
-    newBalance = user.saldo + body.valor;
-  }
-
+    
   await updateBalance(id, newBalance);
   await updateLastTransactions(id, {
     valor: body.valor,
@@ -38,6 +34,7 @@ router.post("/clientes/:id/transacoes", async (req, res) => {
     descricao: body.descricao,
     realizada_em: new Date().toISOString(),
   });
+
   return res.status(200).json({ limite: user.limite, saldo: newBalance });
 });
 
