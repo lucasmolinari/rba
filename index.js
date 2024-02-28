@@ -3,11 +3,11 @@ import router from "./src/api.js";
 import cluster from "cluster";
 import os from "os";
 const cpus = os.cpus().length;
-const port = process.env.PORT || 9999;
+const port = process.env.PORT || 3000;
 const app = express();
 app.use(express.json());
 app.set("port", port);
-app.use(router)
+app.use(router);
 
 if (cluster.isPrimary) {
   console.log(`Primary ${process.pid} is running`);
@@ -20,6 +20,6 @@ if (cluster.isPrimary) {
 } else {
   app.listen(port, () => {
     console.log(`Server running on port ${port}`);
-    console.log(`Worker ${process.pid} started`)
+    console.log(`Worker ${process.pid} started`);
   });
 }
