@@ -3,7 +3,7 @@ import router from "./src/api.js";
 import cluster from "cluster";
 import os from "os";
 const cpus = os.cpus().length;
-const port = process.env.PORT || 3000;
+const port = process.env.API_PORT || 3000;
 const app = express();
 app.use(express.json());
 app.set("port", port);

@@ -1,6 +1,7 @@
-import mongoose, { get } from "mongoose";
-
-const uri = process.env.MONGO_URI;
+import mongoose from "mongoose";
+const { DB_USER, DB_PASSWORD, DB_HOST, DB_PORT, DB_NAME } = process.env;
+const url = `mongodb://mongo:pass@mongo:27017/rbe?authSource=admin`;
+console.log(url);
 const users = [
   { id: 1, limite: 100000, saldo: 0, ultimas_transacoes: [] },
   { id: 2, limite: 80000, saldo: 0, ultimas_transacoes: [] },
@@ -25,10 +26,11 @@ const userSchema = new mongoose.Schema({
   ultimas_transacoes: [transactionSchema],
 });
 const User = mongoose.model("User", userSchema);
-
 async function run() {
-  await mongoose.connect(uri);
-  console.log("Connected to MongoDB");
+  await mongoose
+    .connect(url)
+    .then(() => console.log("Connected to MongoDB"))
+    .catch((err) => console.log(err));
   await insertUsers();
 }
 

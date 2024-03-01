@@ -8,6 +8,7 @@ import {
 } from "./db.js";
 
 export const router = Router();
+
 // POST /clientes/[id]/transacoes
 router.post("/clientes/:id/transacoes", async (req, res) => {
   const id = req.params.id;

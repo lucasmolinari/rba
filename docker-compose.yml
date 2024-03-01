@@ -5,23 +5,37 @@ services:
     image: lucasmolinari/rbe:latest
     hostname: api01
     environment:
-      - DB_HOSTNAME=db
+      WAIT_HOSTS: mongo:27017
     ports:
-      - "8081:8080"
+      - 8081:8080
     deploy:
       resources:
         limits:
           cpus: "0.6"
           memory: "200MB"
-
+    depends_on:
+      - mongo
+    networks:
+      - default
   api02:
-    <<: *api 
+    <<: *api
     hostname: api02
-    environment:
-      - DB_HOSTNAME=db
     ports:
-      - "8082:8080"
- 
+      - 8082:8080
+
+  mongo:
+    image: mongo:4.4.6
+    restart: always
+    ports:
+      - 27017:27017
+    hostname: mongo
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=mongo
+      - MONGO_INITDB_ROOT_PASSWORD=pass
+      - MONGO_INITDB_DATABASE=rbe
+    networks:
+      - default
+
   nginx:
     image: nginx:latest
     volumes:
@@ -30,12 +44,15 @@ services:
       - api01
       - api02
     ports:
-      - "9999:9999" 
+      - 9999:9999
     deploy:
       resources:
         limits:
           cpus: "0.17"
           memory: "10MB"
+    networks:
+      - default
+
 networks:
   default:
     driver: bridge
