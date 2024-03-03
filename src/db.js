@@ -7,17 +7,6 @@ async function run() {
       console.log("Connected to MongoDB");
     })
     .catch((err) => console.log(err));
-  await insertInitialUsers();
-}
-
-async function insertInitialUsers() {
-  for (const user of users) {
-    if (await User.findById(user._id)) {
-      continue;
-    }
-    const newUser = new User(user);
-    await newUser.save();
-  }
 }
 
 export async function getUser(id) {
@@ -33,21 +22,7 @@ export async function updateUser(id, saldo, transacao, last_transactions) {
   });
 }
 
-export async function resetUsers() {
-  for (const user of users) {
-    await User.findByIdAndDelete(user._id);
-  }
-  await insertInitialUsers();
-}
-
 const url = `mongodb://mongo:pass@mongo:27017/rbe?authSource=admin`;
-const users = [
-  { _id: 1, limite: 100000, saldo: 0, ultimas_transacoes: [] },
-  { _id: 2, limite: 80000, saldo: 0, ultimas_transacoes: [] },
-  { _id: 3, limite: 1000000, saldo: 0, ultimas_transacoes: [] },
-  { _id: 4, limite: 10000000, saldo: 0, ultimas_transacoes: [] },
-  { _id: 5, limite: 500000, saldo: 0, ultimas_transacoes: [] },
-];
 
 const transactionSchema = new mongoose.Schema(
   {
@@ -67,4 +42,4 @@ const userSchema = new mongoose.Schema({
 const User = mongoose.model("User", userSchema);
 
 run();
-export default { getUser, updateUser, resetUsers };
+export default { getUser, updateUser };

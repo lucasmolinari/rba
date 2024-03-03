@@ -1,6 +1,6 @@
 import { Router } from "express";
 
-import { getUser, updateUser, resetUsers } from "./db.js";
+import { getUser, updateUser } from "./db.js";
 
 export const router = Router();
 
@@ -72,22 +72,5 @@ router.get("/clientes/:id/extrato", async (req, res) => {
     console.log(`\nExtrato: GET -> id: ${id}\n`);
   }
 });
-
-router.delete("/reset", async (_, res) => {
-  await resetUsers();
-  res.status(200).json({ message: "Users reseted" });
-});
-
-// async function isBodyValid(body) {
-//   if (!["d", "c"].includes(body.tipo)) {
-//     throw new Error("Tipo Inválido");
-//   }
-//   if (!Number.isInteger(body.valor) || body.valor <= 0) {
-//     throw new Error("Valor Inválido");
-//   }
-//   if (!Boolean(body.descricao) || body.descricao.length > 10) {
-//     throw new Error("Descrição Inválida");
-//   }
-// }
 
 export default router;

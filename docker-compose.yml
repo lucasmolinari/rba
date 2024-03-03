@@ -37,6 +37,8 @@ services:
         limits:
           cpus: "0.35"
           memory: "100MB"
+    volumes:
+      - ./mongo/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
 
   nginx:
     image: nginx:latest
