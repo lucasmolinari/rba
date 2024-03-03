@@ -3,14 +3,16 @@ import mongoose from "mongoose";
 async function run() {
   await mongoose
     .connect(url)
-    .then(() => console.log("Connected to MongoDB"))
+    .then(() => {
+      console.log("Connected to MongoDB");
+    })
     .catch((err) => console.log(err));
-  await insertUsers();
+  await insertInitialUsers();
 }
 
-async function insertUsers() {
+async function insertInitialUsers() {
   for (const user of users) {
-    if (await User.findOne({ id: user.id })) {
+    if (await User.findById(user._id)) {
       continue;
     }
     const newUser = new User(user);
@@ -19,41 +21,32 @@ async function insertUsers() {
 }
 
 export async function getUser(id) {
-  return await mongoose.model("User").findOne({ id: id }, "-_id");
+  return await mongoose.model("User").findById(id, "-_id");
 }
 
-export async function updateBalance(id, saldo) {
-  await mongoose.model("User").updateOne({ id: id }, { saldo: saldo });
+export async function updateUser(id, saldo, transacao, last_transactions) {
+  if (last_transactions.length >= 10) last_transactions.pop();
+  last_transactions.unshift(transacao);
+  await mongoose.model("User").findByIdAndUpdate(id, {
+    saldo: saldo,
+    ultimas_transacoes: last_transactions,
+  });
 }
 
 export async function resetUsers() {
   for (const user of users) {
-    await User.findOneAndDelete({ id: user.id });
+    await User.findByIdAndDelete(user._id);
   }
-  await insertUsers();
-}
-
-export async function updateLastTransactions(id, transacao) {
-  let lastTransactions = await getTransactions(id);
-  if (lastTransactions.length >= 10) {
-    lastTransactions.pop();
-  }
-  lastTransactions.unshift(transacao);
-  await User.updateOne({ id: id }, { ultimas_transacoes: lastTransactions });
-}
-
-export async function getTransactions(id) {
-  const user = await getUser(id);
-  return await user.ultimas_transacoes;
+  await insertInitialUsers();
 }
 
 const url = `mongodb://mongo:pass@mongo:27017/rbe?authSource=admin`;
 const users = [
-  { id: 1, limite: 100000, saldo: 0, ultimas_transacoes: [] },
-  { id: 2, limite: 80000, saldo: 0, ultimas_transacoes: [] },
-  { id: 3, limite: 1000000, saldo: 0, ultimas_transacoes: [] },
-  { id: 4, limite: 10000000, saldo: 0, ultimas_transacoes: [] },
-  { id: 5, limite: 500000, saldo: 0, ultimas_transacoes: [] },
+  { _id: 1, limite: 100000, saldo: 0, ultimas_transacoes: [] },
+  { _id: 2, limite: 80000, saldo: 0, ultimas_transacoes: [] },
+  { _id: 3, limite: 1000000, saldo: 0, ultimas_transacoes: [] },
+  { _id: 4, limite: 10000000, saldo: 0, ultimas_transacoes: [] },
+  { _id: 5, limite: 500000, saldo: 0, ultimas_transacoes: [] },
 ];
 
 const transactionSchema = new mongoose.Schema(
@@ -66,7 +59,7 @@ const transactionSchema = new mongoose.Schema(
   { _id: false }
 );
 const userSchema = new mongoose.Schema({
-  id: Number,
+  _id: Number,
   limite: Number,
   saldo: Number,
   ultimas_transacoes: [transactionSchema],
@@ -74,4 +67,4 @@ const userSchema = new mongoose.Schema({
 const User = mongoose.model("User", userSchema);
 
 run();
-export default { getUser, updateBalance, resetUsers, updateLastTransactions };
+export default { getUser, updateUser, resetUsers };

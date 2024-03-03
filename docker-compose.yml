@@ -15,8 +15,7 @@ services:
           memory: "220MB"
     depends_on:
       - mongo
-    networks:
-      - default
+
   api02:
     <<: *api
     hostname: api02
@@ -38,8 +37,6 @@ services:
         limits:
           cpus: "0.35"
           memory: "100MB"
-    networks:
-      - default
 
   nginx:
     image: nginx:latest
@@ -55,8 +52,6 @@ services:
         limits:
           cpus: "0.15"
           memory: "10MB"
-    networks:
-      - default
 
 networks:
   default:

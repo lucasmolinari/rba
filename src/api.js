@@ -1,11 +1,6 @@
-import e, { Router } from "express";
+import { Router } from "express";
 
-import {
-  getUser,
-  updateBalance,
-  resetUsers,
-  updateLastTransactions,
-} from "./db.js";
+import { getUser, updateUser, resetUsers } from "./db.js";
 
 export const router = Router();
 
@@ -27,12 +22,20 @@ router.post("/clientes/:id/transacoes", async (req, res) => {
       throw new Error("Limite excedido");
     }
 
-    await updateBalance(id, newBalance);
-    await updateLastTransactions(id, body);
+    await updateUser(
+      id,
+      newBalance,
+      {
+        valor: body.valor,
+        tipo: body.tipo,
+        descricao: body.descricao,
+        realizada_em: new Date().toISOString(),
+      },
+      user.ultimas_transacoes
+    );
 
     return res.status(200).json({ limite: user.limite, saldo: newBalance });
   } catch (error) {
-    console.log(error);
     if (error.message === "Cliente não encontrado") {
       return res.status(404).json({ error: error.message });
     }
@@ -59,7 +62,6 @@ router.get("/clientes/:id/extrato", async (req, res) => {
       .status(200)
       .json({ saldo: balance, ultimas_transacoes: user.ultimas_transacoes });
   } catch (error) {
-    console.log(error);
     if (error.message === "Cliente não encontrado") {
       return res.status(404).json({ error: error.message });
     }
@@ -69,7 +71,7 @@ router.get("/clientes/:id/extrato", async (req, res) => {
   }
 });
 
-router.delete("/reset", async (req, res) => {
+router.delete("/reset", async (_, res) => {
   await resetUsers();
   res.status(200).json({ message: "Users reseted" });
 });
