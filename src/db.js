@@ -1,31 +1,5 @@
 import mongoose from "mongoose";
-const { DB_USER, DB_PASSWORD, DB_HOST, DB_PORT, DB_NAME } = process.env;
-const url = `mongodb://mongo:pass@mongo:27017/rbe?authSource=admin`;
-console.log(url);
-const users = [
-  { id: 1, limite: 100000, saldo: 0, ultimas_transacoes: [] },
-  { id: 2, limite: 80000, saldo: 0, ultimas_transacoes: [] },
-  { id: 3, limite: 1000000, saldo: 0, ultimas_transacoes: [] },
-  { id: 4, limite: 10000000, saldo: 0, ultimas_transacoes: [] },
-  { id: 5, limite: 500000, saldo: 0, ultimas_transacoes: [] },
-];
 
-const transactionSchema = new mongoose.Schema(
-  {
-    valor: Number,
-    tipo: String,
-    descricao: String,
-    realizada_em: Date,
-  },
-  { _id: false }
-);
-const userSchema = new mongoose.Schema({
-  id: Number,
-  limite: Number,
-  saldo: Number,
-  ultimas_transacoes: [transactionSchema],
-});
-const User = mongoose.model("User", userSchema);
 async function run() {
   await mongoose
     .connect(url)
@@ -73,5 +47,31 @@ export async function getTransactions(id) {
   return await user.ultimas_transacoes;
 }
 
-run().catch((err) => console.dir(err));
+const url = `mongodb://mongo:pass@mongo:27017/rbe?authSource=admin`;
+const users = [
+  { id: 1, limite: 100000, saldo: 0, ultimas_transacoes: [] },
+  { id: 2, limite: 80000, saldo: 0, ultimas_transacoes: [] },
+  { id: 3, limite: 1000000, saldo: 0, ultimas_transacoes: [] },
+  { id: 4, limite: 10000000, saldo: 0, ultimas_transacoes: [] },
+  { id: 5, limite: 500000, saldo: 0, ultimas_transacoes: [] },
+];
+
+const transactionSchema = new mongoose.Schema(
+  {
+    valor: Number,
+    tipo: String,
+    descricao: String,
+    realizada_em: Date,
+  },
+  { _id: false }
+);
+const userSchema = new mongoose.Schema({
+  id: Number,
+  limite: Number,
+  saldo: Number,
+  ultimas_transacoes: [transactionSchema],
+});
+const User = mongoose.model("User", userSchema);
+
+run();
 export default { getUser, updateBalance, resetUsers, updateLastTransactions };

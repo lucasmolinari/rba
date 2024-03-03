@@ -11,8 +11,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.6"
-          memory: "200MB"
+          cpus: "0.5"
+          memory: "220MB"
     depends_on:
       - mongo
     networks:
@@ -33,6 +33,11 @@ services:
       - MONGO_INITDB_ROOT_USERNAME=mongo
       - MONGO_INITDB_ROOT_PASSWORD=pass
       - MONGO_INITDB_DATABASE=rbe
+    deploy:
+      resources:
+        limits:
+          cpus: "0.35"
+          memory: "100MB"
     networks:
       - default
 
@@ -48,7 +53,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.17"
+          cpus: "0.15"
           memory: "10MB"
     networks:
       - default
