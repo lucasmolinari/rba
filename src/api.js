@@ -1,6 +1,11 @@
 import { Router } from "express";
 
-import { getUser, updateUser } from "./db.js";
+import {
+  getUser,
+  updateLastTransactions,
+  debitTransaction,
+  creditTransaction,
+} from "./db.js";
 
 export const router = Router();
 
@@ -19,30 +24,25 @@ router.post("/clientes/:id/transacoes", async (req, res) => {
     }
 
     const id = req.params.id;
-    const user = await getUser(id);
-    if (user === null) {
+
+    if (id > 5 || id < 1)
       return res.status(404).json({ error: "Cliente não encontrado" });
+
+    let userInfo;
+    if (body.tipo === "c") {
+      userInfo = await creditTransaction(id, body.valor);
+    } else {
+      userInfo = await debitTransaction(id, body.valor);
+      if (!userInfo.isValid)
+        return res.status(422).json({ error: "Limite excedido" });
     }
-
-    const newBalance =
-      user.saldo + (body.tipo === "d" ? -body.valor : body.valor);
-    if (newBalance < -user.limite) {
-      return res.status(422).json({ error: "Limite excedido" });
-    }
-
-    await updateUser(
-      id,
-      newBalance,
-      {
-        valor: body.valor,
-        tipo: body.tipo,
-        descricao: body.descricao,
-        realizada_em: new Date().toISOString(),
-      },
-      user.ultimas_transacoes
-    );
-
-    return res.status(200).json({ limite: user.limite, saldo: newBalance });
+    res.status(200).json({ limite: userInfo.limite, saldo: userInfo.saldo });
+    await updateLastTransactions(id, {
+      valor: body.valor,
+      tipo: body.tipo,
+      descricao: body.descricao,
+      realizada_em: new Date().toISOString(),
+    });
   } catch (error) {
     return res.status(422).json({ error: error.message });
   } finally {
@@ -53,23 +53,23 @@ router.post("/clientes/:id/transacoes", async (req, res) => {
 // Extrato: GET /clientes/[id]/extrato
 router.get("/clientes/:id/extrato", async (req, res) => {
   const id = req.params.id;
+  if (id > 5 || id < 1)
+    return res.status(404).json({ error: "Cliente não encontrado" });
   try {
     const user = await getUser(id);
-    if (user === null) {
-      return res.status(404).json({ error: "Cliente não encontrado" });
-    }
     const balance = {
       total: user.saldo,
       data_extrato: new Date().toISOString(),
       limite: user.limite,
     };
+
     return res
       .status(200)
       .json({ saldo: balance, ultimas_transacoes: user.ultimas_transacoes });
   } catch (error) {
     return res.status(422).json({ error: error.message });
   } finally {
-    console.log(`\nExtrato: GET -> id: ${id}\n`);
+    console.log(`Extrato: GET -> id: ${id}\n`);
   }
 });
 
