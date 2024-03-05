@@ -1,6 +1,6 @@
 import { MongoClient } from "mongodb";
 
-const uri = "mongodb://mongo:pass@localhost:27017/rbe?authSource=admin";
+const uri = "mongodb://mongo:pass@mongo:27017/rbe?authSource=admin";
 let client;
 let users;
 async function run() {
