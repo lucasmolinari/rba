@@ -23,8 +23,9 @@ router.post("/clientes/:id/transacoes", async (req, res) => {
       return res.status(422).json({ error: "Descrição Inválida" });
     }
 
-    const id = req.params.id;
-
+    const id = Number(req.params.id);
+    if (isNaN(id) || !Number.isInteger(id))
+      return res.status(422).json({ error: "ID Inválido" });
     if (id > 5 || id < 1)
       return res.status(404).json({ error: "Cliente não encontrado" });
 
@@ -52,7 +53,9 @@ router.post("/clientes/:id/transacoes", async (req, res) => {
 
 // Extrato: GET /clientes/[id]/extrato
 router.get("/clientes/:id/extrato", async (req, res) => {
-  const id = req.params.id;
+  const id = Number(req.params.id);
+  if (isNaN(id) || !Number.isInteger(id))
+    return res.status(422).json({ error: "ID Inválido" });
   if (id > 5 || id < 1)
     return res.status(404).json({ error: "Cliente não encontrado" });
   try {

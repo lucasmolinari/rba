@@ -1,21 +1,28 @@
-import mongoose from "mongoose";
+import { MongoClient } from "mongodb";
 
+const uri = "mongodb://mongo:pass@localhost:27017/rbe?authSource=admin";
+let client;
+let users;
 async function run() {
-  await mongoose
-    .connect(url)
-    .then(() => {
-      console.log("Connected to MongoDB");
-    })
-    .catch((err) => console.log(err));
+  try {
+    client = await MongoClient.connect(uri, { maxPoolSize: 50 });
+    users = client.db("rbe").collection("users");
+    console.log("Connected to MongoDB");
+  } catch (e) {
+    console.error("Failed to connect to MongoDB: \n", e.message);
+  }
 }
 
 export async function getUser(id) {
-  return await mongoose.model("User").findById(id, "-_id");
+  return await users.findOne(
+    { _id: id },
+    { projection: { saldo: 1, limite: 1, ultimas_transacoes: 1 } }
+  );
 }
 
 export async function debitTransaction(id, valor) {
-  return await mongoose.model("User").findByIdAndUpdate(
-    id,
+  return await users.findOneAndUpdate(
+    { _id: id },
     [
       {
         $set: {
@@ -46,62 +53,35 @@ export async function debitTransaction(id, valor) {
         },
       },
     ],
-    { new: true }
+    { returnDocument: "after", projection: { saldo: 1, limite: 1, isValid: 1 } }
   );
 }
 
 export async function creditTransaction(id, valor) {
-  return await mongoose
-    .model("User")
-    .findByIdAndUpdate(
-      id,
-      { $inc: { saldo: valor } },
-      { new: true, projection: { saldo: 1, limite: 1 } }
-    );
-}
-
-export async function updateLastTransactions(id, transacao) {
-  return await mongoose.model("User").findByIdAndUpdate(
-    id,
-    [
-      {
-        $set: {
-          ultimas_transacoes: {
-            $slice: [
-              {
-                $concatArrays: ["$ultimas_transacoes", [transacao]],
-              },
-              -10,
-            ],
-          },
-        },
-      },
-    ],
-    { new: true }
+  return await users.findOneAndUpdate(
+    { _id: id },
+    { $inc: { saldo: valor } },
+    { returnDocument: "after", projection: { saldo: 1, limite: 1 } }
   );
 }
 
-const url = `mongodb://mongo:pass@mongo:27017/rbe?authSource=admin`;
-
-const transactionSchema = new mongoose.Schema(
-  {
-    valor: Number,
-    tipo: String,
-    descricao: String,
-    realizada_em: Date,
-  },
-  { _id: false }
-);
-const userSchema = new mongoose.Schema({
-  _id: Number,
-  limite: Number,
-  saldo: Number,
-  ultimas_transacoes: [transactionSchema],
-  isValid: Boolean,
-});
-const User = mongoose.model("User", userSchema);
-
-run();
+export async function updateLastTransactions(id, transacao) {
+  await users.findOneAndUpdate({ _id: id }, [
+    {
+      $set: {
+        ultimas_transacoes: {
+          $slice: [
+            {
+              $concatArrays: ["$ultimas_transacoes", [transacao]],
+            },
+            -10,
+          ],
+        },
+      },
+    },
+  ]);
+}
+await run();
 export default {
   getUser,
   updateLastTransactions,
