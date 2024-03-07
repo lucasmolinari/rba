@@ -5,7 +5,7 @@ let client;
 let users;
 async function run() {
   try {
-    client = await MongoClient.connect(uri, { maxPoolSize: 50 });
+    client = await MongoClient.connect(uri, { maxPoolSize: 100 });
     users = client.db("rbe").collection("users");
     console.log("Connected to MongoDB");
   } catch (e) {
@@ -72,9 +72,9 @@ export async function updateLastTransactions(id, transacao) {
         ultimas_transacoes: {
           $slice: [
             {
-              $concatArrays: ["$ultimas_transacoes", [transacao]],
+              $concatArrays: [[transacao], "$ultimas_transacoes"],
             },
-            -10,
+            10,
           ],
         },
       },

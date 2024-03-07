@@ -23,7 +23,7 @@ services:
       - 8082:8080
 
   mongo:
-    image: mongo:4.4.6
+    image: mongo
     restart: always
     ports:
       - 27017:27017

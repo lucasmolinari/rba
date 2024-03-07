@@ -19,7 +19,7 @@ router.post("/clientes/:id/transacoes", async (req, res) => {
     if (!Number.isInteger(body.valor) || body.valor <= 0) {
       return res.status(422).json({ error: "Valor Inválido" });
     }
-    if (!Boolean(body.descricao) || body.descricao.length > 10) {
+    if (body.descricao.length > 10 || body.descricao.length < 1) {
       return res.status(422).json({ error: "Descrição Inválida" });
     }
 
@@ -37,13 +37,15 @@ router.post("/clientes/:id/transacoes", async (req, res) => {
       if (!userInfo.isValid)
         return res.status(422).json({ error: "Limite excedido" });
     }
-    res.status(200).json({ limite: userInfo.limite, saldo: userInfo.saldo });
     await updateLastTransactions(id, {
       valor: body.valor,
       tipo: body.tipo,
       descricao: body.descricao,
       realizada_em: new Date().toISOString(),
     });
+    return res
+      .status(200)
+      .json({ limite: userInfo.limite, saldo: userInfo.saldo });
   } catch (error) {
     return res.status(422).json({ error: error.message });
   } finally {

@@ -1,15 +1,3 @@
-db.createCollection({
-  user: "root",
-  pwd: "pass",
-  roles: [
-    {
-      role: "readWrite",
-      db: "rbe",
-    },
-  ],
-});
-
-db = new Mongo().getDB("rbe");
 db.createCollection("users");
 db.users.insertMany([
   { _id: 1, limite: 100000, saldo: 0, ultimas_transacoes: [] },
