@@ -1,7 +1,6 @@
 # Rinha de Backend 2024
-Olá :)
+Source code da minha solução pra [Rinha de Backend 2024](https://github.com/zanfranceschi/rinha-de-backend-2024-q1)!
 
-Meu objetivo é adquirir o máximo de conhecimento possível, saindo da zona de conforto, com uma stack incomum entre os participantes da rinha.
 ## Stack
 [![My Skills](https://skillicons.dev/icons?i=nodejs,mongodb,nginx,&theme=light)](https://skillicons.dev)
 
